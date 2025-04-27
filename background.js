@@ -29,7 +29,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Rotate page using a wrapper with real window measurements and bounce only on reset
+// Rotate tab using a wrapper with real window measurements and bounce only on reset
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
