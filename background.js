@@ -29,7 +29,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Rotate the page using a wrapper div
+// Rotate page using a wrapper with real window measurements
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
@@ -48,7 +48,7 @@ function rotatePage(tabId, rotation) {
         }
         document.body.appendChild(wrapper);
 
-        // Clean up body styles
+        // Body styles
         document.body.style.margin = "0";
         document.body.style.padding = "0";
         document.body.style.overflow = "auto";
@@ -56,12 +56,16 @@ function rotatePage(tabId, rotation) {
         document.body.style.width = "100%";
       }
 
-      // Wrapper styles
+      // Get live window size
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+
+      // Apply wrapper styles
       wrapper.style.transition = "transform 0.5s ease";
-      wrapper.style.transformOrigin = "center center";
+      wrapper.style.transformOrigin = "top left"; // key difference!
       wrapper.style.width = "100%";
       wrapper.style.height = "100%";
-      wrapper.style.position = "relative";
+      wrapper.style.position = "absolute";
 
       if (visualRotation === 0) {
         wrapper.animate([
@@ -74,18 +78,18 @@ function rotatePage(tabId, rotation) {
         });
         wrapper.style.transform = 'rotate(0deg)';
       } else if (visualRotation === 90) {
-        wrapper.style.transform = `rotate(90deg) translateY(-100%)`;
+        wrapper.style.transform = `rotate(90deg) translate(0px, -${w}px)`;
       } else if (visualRotation === 180) {
-        wrapper.style.transform = `rotate(180deg) translate(-100%, -100%)`;
+        wrapper.style.transform = `rotate(180deg) translate(-${w}px, -${h}px)`;
       } else if (visualRotation === 270) {
-        wrapper.style.transform = `rotate(270deg) translateX(-100%)`;
+        wrapper.style.transform = `rotate(270deg) translate(-${h}px, 0px)`;
       }
     },
     args: [rotation]
   });
 }
 
-// Handle right-click context menu options
+// Handle right-click context menu
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
 
