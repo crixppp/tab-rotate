@@ -1,32 +1,32 @@
-let rotation = 0;
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.storage.local.clear(); // clear rotation info when the extension is installed or updated
+});
 
-chrome.action.onClicked.addListener((tab) => {
-  rotation = (rotation + 90) % 360;
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: (rotation) => {
-      const body = document.body;
-      const html = document.documentElement;
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    chrome.storage.local.remove(`rotation_${tabId}`); // reset rotation when the page refreshes
+  }
+});
 
-      // Reset all styles first
-      body.style.margin = "0";
-      body.style.padding = "0";
-      body.style.overflow = "hidden"; // disable scroll
-      html.style.overflow = "hidden"; // disable scroll
+chrome.action.onClicked.addListener(async (tab) => {
+  if (!tab.id) return;
 
-      if (rotation === 0) {
-        body.style.transform = "none";
-      } else {
-        body.style.transform = `rotate(${rotation}deg)`;
-        body.style.transformOrigin = "center center";
-        body.style.width = "100vh";
-        body.style.height = "100vw";
-        body.style.position = "fixed";
-        body.style.top = "50%";
-        body.style.left = "50%";
-        body.style.transform += " translate(-50%, -50%)";
-      }
-    },
-    args: [rotation]
+  const key = `rotation_${tab.id}`;
+
+  chrome.storage.local.get([key], (result) => {
+    let rotation = result[key] || 0;
+    rotation = (rotation + 90) % 360;
+
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (rotation) => {
+        document.body.style.transition = "transform 0.5s ease";
+        document.body.style.transform = `rotate(${rotation}deg)`;
+        document.body.style.transformOrigin = "center center";
+      },
+      args: [rotation]
+    });
+
+    chrome.storage.local.set({ [key]: rotation });
   });
 });
