@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Page Rotator",
+  "version": "1.0",
+  "description": "Rotates the page 90 degrees on each click.",
+  "permissions": ["scripting", "activeTab"],
+  "action": {
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    },
+    "default_title": "Rotate Page"
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
