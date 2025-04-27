@@ -29,7 +29,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Function to rotate the page with correct transforms and bounce reset
+// Rotate the page safely without messing layout
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
@@ -37,17 +37,13 @@ function rotatePage(tabId, rotation) {
       const visualRotation = rotation % 360;
 
       document.body.style.transition = "transform 0.5s ease";
-      document.body.style.transformOrigin = "top left";
-
-      // Always reset styles first
-      document.body.style.width = "";
-      document.body.style.height = "";
+      document.body.style.transformOrigin = "center center";
+      document.body.style.position = "relative";
       document.documentElement.style.overflow = "auto";
       document.body.style.overflow = "auto";
-      document.body.style.position = "relative";
 
       if (visualRotation === 0) {
-        // Bounce animation when resetting to 0°
+        // Bounce when resetting
         document.body.animate([
           { transform: 'scale(1.1) rotate(0deg)' },
           { transform: 'scale(0.9) rotate(0deg)' },
@@ -57,19 +53,15 @@ function rotatePage(tabId, rotation) {
           easing: 'ease-out'
         });
         document.body.style.transform = 'rotate(0deg)';
-      } else if (visualRotation === 90) {
-        document.body.style.transform = `rotate(90deg) translate(0, -100%)`;
-      } else if (visualRotation === 180) {
-        document.body.style.transform = `rotate(180deg) translate(-100%, -100%)`;
-      } else if (visualRotation === 270) {
-        document.body.style.transform = `rotate(270deg) translate(-100%, 0)`;
+      } else {
+        document.body.style.transform = `rotate(${visualRotation}deg)`;
       }
     },
     args: [rotation]
   });
 }
 
-// Handle right-click context menu clicks
+// Handle right-click menu
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
 
@@ -93,7 +85,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   });
 });
 
-// Handle left-click quick rotation (90° each click)
+// Handle left-click quick rotate (90°)
 chrome.action.onClicked.addListener((tab) => {
   if (!tab || !tab.id) return;
 
@@ -101,7 +93,7 @@ chrome.action.onClicked.addListener((tab) => {
 
   chrome.storage.local.get([key], (result) => {
     let rotation = result[key] || 0;
-    rotation += 90; // Keep adding
+    rotation += 90;
 
     rotatePage(tab.id, rotation);
     chrome.storage.local.set({ [key]: rotation });
