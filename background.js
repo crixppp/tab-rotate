@@ -29,7 +29,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Rotate page using a wrapper div
+// Rotate the page using a wrapper div
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
@@ -53,6 +53,7 @@ function rotatePage(tabId, rotation) {
         document.body.style.padding = "0";
         document.body.style.overflow = "auto";
         document.body.style.height = "100%";
+        document.body.style.width = "100%";
       }
 
       // Wrapper styles
@@ -63,7 +64,6 @@ function rotatePage(tabId, rotation) {
       wrapper.style.position = "relative";
 
       if (visualRotation === 0) {
-        // Bounce animation when resetting
         wrapper.animate([
           { transform: 'scale(1.1) rotate(0deg)' },
           { transform: 'scale(0.9) rotate(0deg)' },
@@ -73,15 +73,19 @@ function rotatePage(tabId, rotation) {
           easing: 'ease-out'
         });
         wrapper.style.transform = 'rotate(0deg)';
-      } else {
-        wrapper.style.transform = `rotate(${visualRotation}deg)`;
+      } else if (visualRotation === 90) {
+        wrapper.style.transform = `rotate(90deg) translateY(-100%)`;
+      } else if (visualRotation === 180) {
+        wrapper.style.transform = `rotate(180deg) translate(-100%, -100%)`;
+      } else if (visualRotation === 270) {
+        wrapper.style.transform = `rotate(270deg) translateX(-100%)`;
       }
     },
     args: [rotation]
   });
 }
 
-// Handle right-click context menu
+// Handle right-click context menu options
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
 
