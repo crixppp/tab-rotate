@@ -29,22 +29,42 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Rotate the page safely without messing layout
+// Rotate page using a wrapper div
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
     func: (rotation) => {
       const visualRotation = rotation % 360;
 
-      document.body.style.transition = "transform 0.5s ease";
-      document.body.style.transformOrigin = "center center";
-      document.body.style.position = "relative";
-      document.documentElement.style.overflow = "auto";
-      document.body.style.overflow = "auto";
+      let wrapper = document.getElementById("page-rotator-wrapper");
+
+      if (!wrapper) {
+        wrapper = document.createElement("div");
+        wrapper.id = "page-rotator-wrapper";
+
+        // Move all body content inside the wrapper
+        while (document.body.firstChild) {
+          wrapper.appendChild(document.body.firstChild);
+        }
+        document.body.appendChild(wrapper);
+
+        // Clean up body styles
+        document.body.style.margin = "0";
+        document.body.style.padding = "0";
+        document.body.style.overflow = "auto";
+        document.body.style.height = "100%";
+      }
+
+      // Wrapper styles
+      wrapper.style.transition = "transform 0.5s ease";
+      wrapper.style.transformOrigin = "center center";
+      wrapper.style.width = "100%";
+      wrapper.style.height = "100%";
+      wrapper.style.position = "relative";
 
       if (visualRotation === 0) {
-        // Bounce when resetting
-        document.body.animate([
+        // Bounce animation when resetting
+        wrapper.animate([
           { transform: 'scale(1.1) rotate(0deg)' },
           { transform: 'scale(0.9) rotate(0deg)' },
           { transform: 'scale(1.0) rotate(0deg)' }
@@ -52,16 +72,16 @@ function rotatePage(tabId, rotation) {
           duration: 400,
           easing: 'ease-out'
         });
-        document.body.style.transform = 'rotate(0deg)';
+        wrapper.style.transform = 'rotate(0deg)';
       } else {
-        document.body.style.transform = `rotate(${visualRotation}deg)`;
+        wrapper.style.transform = `rotate(${visualRotation}deg)`;
       }
     },
     args: [rotation]
   });
 }
 
-// Handle right-click menu
+// Handle right-click context menu
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
 
@@ -85,7 +105,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   });
 });
 
-// Handle left-click quick rotate (90°)
+// Handle left-click (quick 90° rotate)
 chrome.action.onClicked.addListener((tab) => {
   if (!tab || !tab.id) return;
 
