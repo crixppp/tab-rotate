@@ -29,10 +29,39 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Handle right-click context menu clicks
+// Helper function to rotate the page with bounce animation on reset
+function rotatePage(tabId, rotation) {
+  chrome.scripting.executeScript({
+    target: { tabId: tabId },
+    func: (rotation) => {
+      const visualRotation = rotation % 360;
+      document.body.style.transition = "transform 0.5s ease";
+      
+      if (visualRotation === 0) {
+        // Add bounce effect on reset
+        document.body.animate([
+          { transform: 'scale(1.1) rotate(0deg)' },
+          { transform: 'scale(0.9) rotate(0deg)' },
+          { transform: 'scale(1.0) rotate(0deg)' }
+        ], {
+          duration: 400,
+          easing: 'ease-out'
+        });
+        document.body.style.transform = 'rotate(0deg)';
+      } else {
+        document.body.style.transform = `rotate(${visualRotation}deg)`;
+      }
+
+      document.body.style.transformOrigin = "center center";
+    },
+    args: [rotation]
+  });
+}
+
+// Handle right-click context menu
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
-
+  
   const key = `rotation_${tab.id}`;
 
   chrome.storage.local.get([key], (result) => {
@@ -48,42 +77,22 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
       currentRotation = 0;
     }
 
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (rotation) => {
-        const visualRotation = rotation % 360;
-        document.body.style.transition = "transform 0.5s ease";
-        document.body.style.transform = `rotate(${visualRotation}deg)`;
-        document.body.style.transformOrigin = "center center";
-      },
-      args: [currentRotation]
-    });
-
+    rotatePage(tab.id, currentRotation);
     chrome.storage.local.set({ [key]: currentRotation });
   });
 });
 
-// Handle simple left-click on the extension icon (rotate 90°)
+// Handle left-click (quick rotate 90°)
 chrome.action.onClicked.addListener((tab) => {
   if (!tab || !tab.id) return;
-
+  
   const key = `rotation_${tab.id}`;
 
   chrome.storage.local.get([key], (result) => {
     let rotation = result[key] || 0;
-    rotation += 90; // Keep adding 90 each time
+    rotation += 90; // keep adding
 
-    chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      func: (rotation) => {
-        const visualRotation = rotation % 360;
-        document.body.style.transition = "transform 0.5s ease";
-        document.body.style.transform = `rotate(${visualRotation}deg)`;
-        document.body.style.transformOrigin = "center center";
-      },
-      args: [rotation]
-    });
-
+    rotatePage(tab.id, rotation);
     chrome.storage.local.set({ [key]: rotation });
   });
 });
