@@ -59,11 +59,3 @@ The extension icon should now appear in your Chrome toolbar.
 
 This project is licensed under the MIT License.  
 Feel free to modify and improve it.
-
----
-
-## Future Improvements (Optional Ideas)
-
-- Auto-rescale rotated pages to fit better on very small screens.
-- Add "flip horizontally" (mirror mode) for creative layouts.
-- Custom settings page to adjust rotation speed and bounce style.
