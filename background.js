@@ -29,16 +29,24 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Helper function to rotate the page with bounce animation on reset
+// Function to rotate the page with bounce on reset and proper body sizing
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
     func: (rotation) => {
       const visualRotation = rotation % 360;
+
       document.body.style.transition = "transform 0.5s ease";
-      
+      document.body.style.transformOrigin = "center center";
+
+      // Reset body sizing and scrolling
+      document.body.style.width = "";
+      document.body.style.height = "";
+      document.documentElement.style.overflow = "auto";
+      document.body.style.overflow = "auto";
+
       if (visualRotation === 0) {
-        // Add bounce effect on reset
+        // Bounce animation when resetting to 0°
         document.body.animate([
           { transform: 'scale(1.1) rotate(0deg)' },
           { transform: 'scale(0.9) rotate(0deg)' },
@@ -50,18 +58,22 @@ function rotatePage(tabId, rotation) {
         document.body.style.transform = 'rotate(0deg)';
       } else {
         document.body.style.transform = `rotate(${visualRotation}deg)`;
+        
+        // If rotated 90° or 270°, swap width and height
+        if (visualRotation === 90 || visualRotation === 270) {
+          document.body.style.width = window.innerHeight + "px";
+          document.body.style.height = window.innerWidth + "px";
+        }
       }
-
-      document.body.style.transformOrigin = "center center";
     },
     args: [rotation]
   });
 }
 
-// Handle right-click context menu
+// Handle right-click context menu options
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
-  
+
   const key = `rotation_${tab.id}`;
 
   chrome.storage.local.get([key], (result) => {
@@ -82,15 +94,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
   });
 });
 
-// Handle left-click (quick rotate 90°)
+// Handle left-click quick rotation (90° each click)
 chrome.action.onClicked.addListener((tab) => {
   if (!tab || !tab.id) return;
-  
+
   const key = `rotation_${tab.id}`;
 
   chrome.storage.local.get([key], (result) => {
     let rotation = result[key] || 0;
-    rotation += 90; // keep adding
+    rotation += 90; // Keep adding
 
     rotatePage(tab.id, rotation);
     chrome.storage.local.set({ [key]: rotation });
