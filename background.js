@@ -29,7 +29,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   }
 });
 
-// Function to rotate the page with bounce on reset and proper body sizing
+// Function to rotate the page with correct transforms and bounce reset
 function rotatePage(tabId, rotation) {
   chrome.scripting.executeScript({
     target: { tabId: tabId },
@@ -37,13 +37,14 @@ function rotatePage(tabId, rotation) {
       const visualRotation = rotation % 360;
 
       document.body.style.transition = "transform 0.5s ease";
-      document.body.style.transformOrigin = "center center";
+      document.body.style.transformOrigin = "top left";
 
-      // Reset body sizing and scrolling
+      // Always reset styles first
       document.body.style.width = "";
       document.body.style.height = "";
       document.documentElement.style.overflow = "auto";
       document.body.style.overflow = "auto";
+      document.body.style.position = "relative";
 
       if (visualRotation === 0) {
         // Bounce animation when resetting to 0°
@@ -56,21 +57,19 @@ function rotatePage(tabId, rotation) {
           easing: 'ease-out'
         });
         document.body.style.transform = 'rotate(0deg)';
-      } else {
-        document.body.style.transform = `rotate(${visualRotation}deg)`;
-        
-        // If rotated 90° or 270°, swap width and height
-        if (visualRotation === 90 || visualRotation === 270) {
-          document.body.style.width = window.innerHeight + "px";
-          document.body.style.height = window.innerWidth + "px";
-        }
+      } else if (visualRotation === 90) {
+        document.body.style.transform = `rotate(90deg) translate(0, -100%)`;
+      } else if (visualRotation === 180) {
+        document.body.style.transform = `rotate(180deg) translate(-100%, -100%)`;
+      } else if (visualRotation === 270) {
+        document.body.style.transform = `rotate(270deg) translate(-100%, 0)`;
       }
     },
     args: [rotation]
   });
 }
 
-// Handle right-click context menu options
+// Handle right-click context menu clicks
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (!tab || !tab.id) return;
 
